@@ -43,22 +43,39 @@
          * depending on the its props.
          */
         function YAxes(props) {
-            const { yScale, height } = props;
+            const { yScale, height, type } = props;
             const ticks = yScale.ticks();
-            return <g>
-                <line y2={height} stroke={`black`} />
-                {ticks.map(tickValue => {
-                    return <g key={tickValue} transform={`translate(-10, ${yScale(tickValue)})`}>
-                        <line x2={10} stroke={"black"} />
-                        <text style={{ textAnchor: 'end', fontSize: '12px' }}>
-                            {tickValue}
-                        </text>
-                    </g>
-                })}
-                <text style={{ textAnchor: 'start', fontSize: '15px' }} transform={`translate(10, 0)rotate(90)`}>
-                    {"Trip duration end in"}
-                </text>
-            </g>
+            if (props.type === 'plotchart') {
+                return <g>
+                    <line y2={height} stroke={`black`} />
+                    {ticks.map(tickValue => {
+                        return <g key={tickValue} transform={`translate(-10, ${yScale(tickValue)})`}>
+                            <line x2={10} stroke={"black"} />
+                            <text style={{ textAnchor: 'end', fontSize: '12px' }}>
+                                {tickValue}
+                            </text>
+                        </g>
+                    })}
+                    <text style={{ textAnchor: 'start', fontSize: '15px' }} transform={`translate(10, 0)rotate(90)`}>
+                        {"Trip duration end in"}
+                    </text>
+                </g>
+            } else {
+                return <g transform={`translate(${0}, ${40})`}>
+                    <line y1={height} y2={height * 2} stroke={`black`} />
+                    {ticks.map(tickValue => {
+                        return <g key={tickValue} transform={`translate(-10, ${yScale(tickValue) + height})`}>
+                            <line x2={10} stroke={"black"} />
+                            <text style={{ textAnchor: 'end', fontSize: '12px' }}>
+                                {tickValue}
+                            </text>
+                        </g>
+                    })}
+                    <text style={{ textAnchor: 'start', fontSize: '15px' }} transform={`translate(${10}, ${height})rotate(90)`}>
+                        {"Bikes start from"}
+                    </text>
+                </g>
+            }
 
         }
 
@@ -91,41 +108,9 @@
             }
             else if (props.type === 'categorical') {
                 // draw bar chart
-                const { xScale, yScale, data, width, height, type } = props;
-                const ticks = yScale.ticks();
+                const { xScale, width, height, type } = props;
                 return <g transform={`translate(${0}, ${40})`}>
                     <line x1={0} y1={height * 2} x2={width} y2={height * 2} stroke={`black`} />
-                    {data.map((d) => {
-                        let i = 0;
-                        return <g>
-                            <rect style={{ fill: 'steelblue', stroke: 'black' }}
-                                transform={`translate(${0}, ${height})`}
-                                key={d.station}
-                                x={xScale(d.station)}
-                                y={yScale(d.start)}
-                                width={xScale.bandwidth()}
-                                height={height - yScale(d.start)}
-                            />
-                            <text style={{ textAnchor: 'end', fontSize: '10px', transform: [{ rotate: '-65deg' }] }}
-                                transform={`translate(${xScale(d.station) - 282}, ${height + 170})rotate(-65)`}
-                                y={20 + height} >
-                                {d.station}
-                            </text>
-                        </g>
-                    }
-                    )}
-                    <line y1={height} y2={height * 2} stroke={`black`} />
-                    {ticks.map(tickValue => {
-                        return <g key={tickValue} transform={`translate(-10, ${yScale(tickValue) + height})`}>
-                            <line x2={10} stroke={"black"} />
-                            <text style={{ textAnchor: 'end', fontSize: '12px' }}>
-                                {tickValue}
-                            </text>
-                        </g>
-                    })}
-                    <text style={{ textAnchor: 'start', fontSize: '15px' }} transform={`translate(${10}, ${height})rotate(90)`}>
-                        {"Bikes start from"}
-                    </text>
                 </g>
             }
         }
@@ -144,28 +129,28 @@
             if (selectedPoint === null) {
                 return <g>
                     {data.map(d => {
-                        return <circle key={d.station} cx={xScale(d.tripdurationS)} 
-                        cy={yScale(d.tripdurationE)} r={radius(d)} fill={color(d)} stroke={"black"}
-                        onMouseOver={() => mouseOver(d)} onMouseOut={mouseOut}/>
+                        return <circle key={d.station} cx={xScale(d.tripdurationS)}
+                            cy={yScale(d.tripdurationE)} r={radius(d)} fill={color(d)} stroke={"black"}
+                            onMouseOver={() => mouseOver(d)} onMouseOut={mouseOut} />
                     })}
                 </g>
             } else {
                 return <g>
                     {data.map(d => {
-                        return <circle key={d.station} cx={xScale(d.tripdurationS)} 
-                        cy={yScale(d.tripdurationE)} r={radius(d)} fill={color(d)} stroke={"black"}
-                        onMouseOver={() => mouseOver(d)} onMouseOut={mouseOut}/>
+                        return <circle key={d.station} cx={xScale(d.tripdurationS)}
+                            cy={yScale(d.tripdurationE)} r={radius(d)} fill={color(d)} stroke={"black"}
+                            onMouseOver={() => mouseOver(d)} onMouseOut={mouseOut} />
                     })}
-                    <rect x={0} y={0} width={width} height={height} fill={"lightyellow"} opacity={0.6}/>
-                    {data.filter(d => d.station === selectedPoint).map( d => {
-                        return <circle key={d.index} cx={xScale(d.tripdurationS)} 
-                        cy={yScale(d.tripdurationE)} r={radius(d)} fill={color(d)} stroke={"black"}
-                        onMouseOver={() => mouseOver(d)} onMouseOut={mouseOut}/>
+                    <rect x={0} y={0} width={width} height={height} fill={"lightyellow"} opacity={0.6} />
+                    {data.filter(d => d.station === selectedPoint).map(d => {
+                        return <circle key={d.index} cx={xScale(d.tripdurationS)}
+                            cy={yScale(d.tripdurationE)} r={radius(d)} fill={color(d)} stroke={"black"}
+                            onMouseOver={() => mouseOver(d)} onMouseOut={mouseOut} />
                     })}
                 </g>
             }
-            
-            
+
+
         }
 
         function ScatterPlot(props) {
@@ -173,7 +158,40 @@
         }
 
         function Bars(props) {
-            
+            const [selectedBar, setSelectedBar] = React.useState(null);
+            const { xScale, yScale, data, width, height } = props;
+            const mouseOver = d => {
+                setSelectedBar(d.station);
+            };
+            const mouseOut = () => {
+                setSelectedBar(null);
+            };
+            const color = d => d.station === selectedBar ? "red" : "steelblue";
+
+            return <g>
+                {data.map((d) => {
+                    let i = 0;
+                    return <g transform={`translate(${0}, ${40})`}>
+                        <rect style={{ stroke: 'black' }}
+                            transform={`translate(${0}, ${height})`}
+                            key={d.station}
+                            x={xScale(d.station)}
+                            y={yScale(d.start)}
+                            fill={color(d)}
+                            width={xScale.bandwidth()}
+                            height={height - yScale(d.start)}
+                            onMouseOver={() => mouseOver(d)} onMouseOut={mouseOut}
+                        />
+                        <text style={{ textAnchor: 'end', fontSize: '10px', transform: [{ rotate: '-65deg' }] }}
+                            transform={`translate(${xScale(d.station) - 282}, ${height + 170})rotate(-65)`}
+                            y={20 + height} >
+                            {d.station}
+                        </text>
+                    </g>
+                }
+                )}
+
+            </g>
         }
 
         function BarChart(props) {
@@ -234,13 +252,15 @@
                         <g transform={`translate(${margin.left}, ${margin.top})`} >
                             <ScatterPlot />
                             <Points data={data} xScale={xScale} yScale={yScale} width={innerWidth} height={innerHeight} />
-                            <YAxes yScale={yScale} height={innerHeight} />
+                            <YAxes yScale={yScale} height={innerHeight} type={'plotchart'} />
                             <XAxes xScale={xScale} width={innerWidth} height={innerHeight} type={'quantitative'} />
                         </g>
 
                         <g transform={`translate(${margin.left}, ${margin.top})`} >
                             <BarChart />
-                            <XAxes xScale={xScale1} yScale={yScale1} data={data} width={innerWidth} height={innerHeight} type={'categorical'} />
+                            <Bars xScale={xScale1} yScale={yScale1} data={data} width={innerWidth} height={innerHeight} />
+                            <YAxes yScale={yScale1} height={innerHeight} type={'barchart'} />
+                            <XAxes xScale={xScale1} width={innerWidth} height={innerHeight} type={'categorical'} />
                         </g>
                     </svg>
                 </div>
