@@ -86,7 +86,6 @@
          * depending on the its props.
          */
         function XAxes(props) {
-            console.log(props.type);
             if (props.type === 'quantitative') {
                 // draw plot chart
                 const { xScale, width, height, type } = props;
@@ -116,17 +115,17 @@
         }
 
         function Points(props) {
-            const [selectedPoint, setSelectedPoint] = React.useState(null);
-            const { data, xScale, yScale, width, height } = props;
+            const { data, xScale, yScale, width, height, selected, setSelected } = props;
             const mouseOver = d => {
-                setSelectedPoint(d.station);
+                setSelected(d.station);
             };
             const mouseOut = () => {
-                setSelectedPoint(null);
+                setSelected(null);
             };
-            const color = d => d.station === selectedPoint ? "red" : "steelblue";
-            const radius = d => d.station === selectedPoint ? 10 : 5;
-            if (selectedPoint === null) {
+            
+            const color = d => d.station === selected ? "red" : "steelblue";
+            const radius = d => d.station === selected ? 10 : 5;
+            if (selected === null) {
                 return <g>
                     {data.map(d => {
                         return <circle key={d.station} cx={xScale(d.tripdurationS)}
@@ -142,7 +141,7 @@
                             onMouseOver={() => mouseOver(d)} onMouseOut={mouseOut} />
                     })}
                     <rect x={0} y={0} width={width} height={height} fill={"lightyellow"} opacity={0.6} />
-                    {data.filter(d => d.station === selectedPoint).map(d => {
+                    {data.filter(d => d.station === selected).map(d => {
                         return <circle key={d.index} cx={xScale(d.tripdurationS)}
                             cy={yScale(d.tripdurationE)} r={radius(d)} fill={color(d)} stroke={"black"}
                             onMouseOver={() => mouseOver(d)} onMouseOut={mouseOut} />
@@ -154,19 +153,26 @@
         }
 
         function ScatterPlot(props) {
-            return <g></g>
+            const { data, xScale, yScale, width, height, selected, setSelected } = props;
+            return <g transform={`translate(${margin.left}, ${margin.top})`}>
+                <Points data={data} xScale={xScale} yScale={yScale} width={innerWidth} height={height}
+                selected={selected} setSelected={setSelected}/>
+                <YAxes yScale={yScale} height={height} type={'plotchart'} />
+                <XAxes xScale={xScale} width={innerWidth} height={height} type={'quantitative'} />
+            </g>
         }
 
         function Bars(props) {
-            const [selectedBar, setSelectedBar] = React.useState(null);
-            const { xScale, yScale, data, width, height } = props;
+            const { xScale, yScale, data, width, height, selected, setSelected } = props;
+            const color = d => d.station === selected ? "red" : "steelblue";
+
             const mouseOver = d => {
-                setSelectedBar(d.station);
+                setSelected(d.station);
             };
-            const mouseOut = () => {
-                setSelectedBar(null);
+
+            const mouseOut = (d) => {
+                setSelected(null);
             };
-            const color = d => d.station === selectedBar ? "red" : "steelblue";
 
             return <g>
                 {data.map((d) => {
@@ -195,7 +201,13 @@
         }
 
         function BarChart(props) {
-            return <g></g>
+            const { data, xScale, yScale, width, height, selected, setSelected, mouseOver, mouseOut } = props;
+            return <g transform={`translate(${margin.left}, ${margin.top})`}>
+                <Bars xScale={xScale} yScale={yScale} data={data} width={innerWidth} height={height} 
+                selected={selected} setSelected={setSelected}/>
+                <YAxes yScale={yScale} height={height} type={'barchart'} />
+                <XAxes xScale={xScale} width={innerWidth} height={height} type={'categorical'} />
+            </g>
         }
 
         function Tooltip(props) {
@@ -203,6 +215,10 @@
         }
 
         const Charts = () => {
+            // link mouse event 
+            const [selected, setSelected] = React.useState(null);
+
+            // get data
             const dataAll = useData(csvUrl);
             if (!dataAll) {
                 return <pre>Loading...</pre>;
@@ -235,7 +251,6 @@
                     return d.station;
                 }))
                 .range([0, innerWidth]);
-
             const yScale1 = d3.scaleLinear()
                 .range([innerHeight, 0])
                 .domain([0, d3.max(dataAll, d => d.start)])
@@ -249,19 +264,10 @@
                         <input key="monthText" type="text" value={"May"} readOnly />
                     </div>
                     <svg width={WIDTH} height={HEIGHT}>
-                        <g transform={`translate(${margin.left}, ${margin.top})`} >
-                            <ScatterPlot />
-                            <Points data={data} xScale={xScale} yScale={yScale} width={innerWidth} height={innerHeight} />
-                            <YAxes yScale={yScale} height={innerHeight} type={'plotchart'} />
-                            <XAxes xScale={xScale} width={innerWidth} height={innerHeight} type={'quantitative'} />
-                        </g>
-
-                        <g transform={`translate(${margin.left}, ${margin.top})`} >
-                            <BarChart />
-                            <Bars xScale={xScale1} yScale={yScale1} data={data} width={innerWidth} height={innerHeight} />
-                            <YAxes yScale={yScale1} height={innerHeight} type={'barchart'} />
-                            <XAxes xScale={xScale1} width={innerWidth} height={innerHeight} type={'categorical'} />
-                        </g>
+                        <ScatterPlot data={data} xScale={xScale} yScale={yScale} width={innerWidth} height={innerHeight} 
+                            selected={selected} setSelected={setSelected} />
+                        <BarChart data={data} xScale={xScale1} yScale={yScale1} width={innerWidth} height={innerHeight} 
+                            selected={selected} setSelected={setSelected} />
                     </svg>
                 </div>
             )
